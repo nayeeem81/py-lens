@@ -15,6 +15,7 @@
       </div>
       <div class="shape-readout" aria-live="polite">
         <span id="shape">Loading tensor...</span>
+        <span id="tensor-count">Stack 0</span>
         <span class="status-dot"></span>
       </div>
     </header>
@@ -38,24 +39,37 @@
         <div class="sliders">
           <label class="channel-row channel-r" for="red-control">
             <span class="channel-name"><i></i>Red <output id="red-value">0</output></span>
-            <input id="red-control" type="range" min="-255" max="255" value="0">
+            <div class="channel-inputs">
+              <input id="red-control" type="range" min="-255" max="255" value="0">
+              <input id="red-number" class="channel-number" type="number" min="-255" max="255" value="0" aria-label="Red channel offset">
+            </div>
           </label>
           <label class="channel-row channel-g" for="green-control">
             <span class="channel-name"><i></i>Green <output id="green-value">0</output></span>
-            <input id="green-control" type="range" min="-255" max="255" value="0">
+            <div class="channel-inputs">
+              <input id="green-control" type="range" min="-255" max="255" value="0">
+              <input id="green-number" class="channel-number" type="number" min="-255" max="255" value="0" aria-label="Green channel offset">
+            </div>
           </label>
           <label class="channel-row channel-b" for="blue-control">
             <span class="channel-name"><i></i>Blue <output id="blue-value">0</output></span>
-            <input id="blue-control" type="range" min="-255" max="255" value="0">
+            <div class="channel-inputs">
+              <input id="blue-control" type="range" min="-255" max="255" value="0">
+              <input id="blue-number" class="channel-number" type="number" min="-255" max="255" value="0" aria-label="Blue channel offset">
+            </div>
           </label>
         </div>
 
         <div class="selection-actions">
-          <button id="create-selection-button" type="button">Create selection area</button>
+          <button id="create-selection-button" type="button">Create selection (latest)</button>
+          <button id="create-original-selection-button" type="button">Create selection (original)</button>
           <button id="clear-selection-button" class="secondary-button" type="button">Clear selected area</button>
           <button id="update-button" class="update-button" type="button">Update tensor</button>
         </div>
-        <button id="reset-button" type="button">Reset channels</button>
+        <div class="history-actions">
+          <button id="undo-button" class="secondary-button" type="button">Undo last tensor</button>
+          <button id="reset-button" type="button">Reset channels</button>
+        </div>
         <div class="tensor-note">
           <span class="tensor-mark">[r, g, b]</span>
           <span>Values are clamped to 0–255 before the canvas renders.</span>

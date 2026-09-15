@@ -27,6 +27,7 @@ h1 { margin-bottom: 0; font-size: clamp(2.7rem, 6vw, 5.8rem); letter-spacing: -.
 h2 { margin-bottom: 10px; font-size: 1.45rem; letter-spacing: -.04em; }
 .shape-readout, .canvas-topline, .canvas-footline { font: 500 11px 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .04em; }
 .shape-readout { display: flex; align-items: center; gap: 10px; color: var(--muted); }
+.shape-readout #tensor-count { padding-left: 10px; border-left: 1px solid var(--line); }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px #d5eadb; }
 .workspace { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 20px; align-items: start; }
 .canvas-panel, .controls-panel { background: var(--panel); border: 1px solid var(--line); }
@@ -56,11 +57,17 @@ canvas { display: block; width: min(100%, 660px); height: auto; image-rendering:
 .channel-name output { color: var(--muted); }
 .channel-r .channel-name i { background: var(--red); } .channel-g .channel-name i { background: var(--green); } .channel-b .channel-name i { background: var(--blue); }
 input[type='range'] { width: 100%; accent-color: var(--ink); cursor: ew-resize; }
+.channel-inputs { display: grid; grid-template-columns: minmax(0, 1fr) 58px; gap: 10px; align-items: center; }
+.channel-number { width: 100%; padding: 6px 5px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); font: 500 12px 'DM Mono', monospace; }
+.channel-number:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
 .channel-r input { accent-color: var(--red); } .channel-g input { accent-color: var(--green); } .channel-b input { accent-color: var(--blue); }
 button { margin-top: 46px; padding: 13px 16px; color: var(--panel); background: var(--ink); border: 0; font: 600 11px 'DM Mono', monospace; text-transform: uppercase; cursor: pointer; }
 button:hover { background: #4e5555; }
-.selection-actions { display: grid; gap: 10px; margin-top: 28px; }
+.selection-actions, .history-actions { display: grid; gap: 10px; margin-top: 28px; }
 .selection-actions button { margin-top: 0; }
+.history-actions { grid-template-columns: 1fr 1fr; }
+.history-actions button { margin-top: 0; }
+.history-actions button:disabled { color: var(--muted); background: #eeeae2; border-color: var(--line); cursor: not-allowed; }
 .secondary-button { color: var(--ink); background: transparent; border: 1px solid var(--line); }
 .secondary-button:hover { color: var(--panel); background: var(--ink); }
 .update-button { color: var(--panel); background: var(--green); }

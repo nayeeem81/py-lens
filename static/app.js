@@ -13,14 +13,22 @@ const controls = [
   document.querySelector('#green-control'),
   document.querySelector('#blue-control'),
 ];
+const numberControls = [
+  document.querySelector('#red-number'),
+  document.querySelector('#green-number'),
+  document.querySelector('#blue-number'),
+];
 const outputs = [
   document.querySelector('#red-value'),
   document.querySelector('#green-value'),
   document.querySelector('#blue-value'),
 ];
 let tensor;
+let originalTensor;
+let tensorStack = [];
 let dots = [];
 let selectedPolygon = null;
+let selectionSource = 'latest';
 
 function clamp(value) {
   return Math.max(0, Math.min(255, value));
@@ -28,6 +36,37 @@ function clamp(value) {
 
 function pixelIsSelected(x, y) {
   return !selectedPolygon || isPointInPolygon({ x, y }, selectedPolygon);
+}
+
+function cloneTensor(source) {
+  return {
+    width: source.width,
+    height: source.height,
+    channels: [...source.channels],
+    pixels: source.pixels.map((row) => row.map((pixel) => [...pixel])),
+  };
+}
+
+function setTensorStack(initialTensor) {
+  originalTensor = cloneTensor(initialTensor);
+  tensorStack = [cloneTensor(initialTensor)];
+  tensor = tensorStack[0];
+  updateTensorReadout();
+}
+
+function updateTensorReadout() {
+  if (!tensor) return;
+  shape.textContent = `${tensor.height} × ${tensor.width} × 3 uint8`;
+  document.querySelector('#tensor-count').textContent = `Stack ${tensorStack.length}`;
+  document.querySelector('#undo-button').disabled = tensorStack.length <= 1;
+}
+
+function displayPixel(x, y) {
+  const latest = tensor.pixels[y][x];
+  if (!selectedPolygon || !pixelIsSelected(x, y) || selectionSource === 'latest') {
+    return latest;
+  }
+  return originalTensor.pixels[y][x];
 }
 
 function render() {
@@ -38,17 +77,36 @@ function render() {
 
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      const source = pixels[y][x];
-      const inSelection = pixelIsSelected(x, y);
+      const source = displayPixel(x, y);
       const index = (y * width + x) * 4;
-      image.data[index] = inSelection || !selectedPolygon ? clamp(source[0] + offsets[0]) : source[0];
-      image.data[index + 1] = inSelection || !selectedPolygon ? clamp(source[1] + offsets[1]) : source[1];
-      image.data[index + 2] = inSelection || !selectedPolygon ? clamp(source[2] + offsets[2]) : source[2];
+      image.data[index] = clamp(source[0] + offsets[0]);
+      image.data[index + 1] = clamp(source[1] + offsets[1]);
+      image.data[index + 2] = clamp(source[2] + offsets[2]);
       image.data[index + 3] = 255;
     }
+
   }
   context.putImageData(image, 0, 0);
   drawSelection();
+}
+
+function syncNumberControls() {
+  controls.forEach((control, index) => {
+    numberControls[index].value = control.value;
+  });
+}
+
+function setControlValue(index, value) {
+  const control = controls[index];
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    numberControls[index].value = control.value;
+    return;
+  }
+  const clampedValue = Math.max(Number(control.min), Math.min(Number(control.max), numericValue));
+  control.value = clampedValue;
+  numberControls[index].value = clampedValue;
+  render();
 }
 
 function isPointInPolygon(point, polygon) {
@@ -69,7 +127,7 @@ function drawSelection() {
   if (!dots.length) return;
 
   selectionContext.save();
-  selectionContext.lineWidth = Math.max(2, tensor.width / 180);
+  selectionContext.lineWidth = Math.max(1, tensor.width / 360);
   selectionContext.lineJoin = 'round';
   selectionContext.lineCap = 'round';
   selectionContext.strokeStyle = '#f5c451';
@@ -85,7 +143,7 @@ function drawSelection() {
   dots.forEach((dot) => {
     selectionContext.beginPath();
     selectionContext.fillStyle = '#fffdf8';
-    selectionContext.arc(dot.x, dot.y, Math.max(4, tensor.width / 90), 0, Math.PI * 2);
+    selectionContext.arc(dot.x, dot.y, Math.max(2.5, tensor.width / 180), 0, Math.PI * 2);
     selectionContext.fill();
     selectionContext.lineWidth = 2;
     selectionContext.strokeStyle = '#202426';
@@ -106,7 +164,7 @@ function showPixel(event) {
   const point = canvasPoint(event);
   const x = Math.min(tensor.width - 1, Math.max(0, Math.floor(point.x)));
   const y = Math.min(tensor.height - 1, Math.max(0, Math.floor(point.y)));
-  const source = tensor.pixels[y][x];
+  const source = displayPixel(x, y);
   const adjusted = source.map((value, index) => clamp(value + Number(controls[index].value)));
   position.textContent = `x ${x} / y ${y}`;
   pixelValues.textContent = `R ${adjusted[0]}   G ${adjusted[1]}   B ${adjusted[2]}`;
@@ -115,12 +173,11 @@ function showPixel(event) {
 async function loadTensor() {
   const response = await fetch('/api/tensor');
   if (!response.ok) throw new Error('Tensor request failed');
-  tensor = await response.json();
+  setTensorStack(await response.json());
   canvas.width = tensor.width;
   canvas.height = tensor.height;
   selectionCanvas.width = tensor.width;
   selectionCanvas.height = tensor.height;
-  shape.textContent = `${tensor.height} × ${tensor.width} × 3 uint8`;
   render();
 }
 
@@ -156,7 +213,13 @@ function readImageAsTensor(file) {
   });
 }
 
-controls.forEach((control) => control.addEventListener('input', render));
+controls.forEach((control, index) => control.addEventListener('input', () => {
+  numberControls[index].value = control.value;
+  render();
+}));
+numberControls.forEach((control, index) => control.addEventListener('change', () => {
+  setControlValue(index, control.value);
+}));
 selectionCanvas.addEventListener('pointermove', showPixel);
 selectionCanvas.addEventListener('click', (event) => {
   if (selectedPolygon) return;
@@ -165,7 +228,20 @@ selectionCanvas.addEventListener('click', (event) => {
 });
 downloadButton.addEventListener('click', () => {
   if (!tensor) return;
-  canvas.toBlob((blob) => {
+  const outputCanvas = document.createElement('canvas');
+  outputCanvas.width = tensor.width;
+  outputCanvas.height = tensor.height;
+  const outputContext = outputCanvas.getContext('2d', { alpha: false });
+  const image = outputContext.createImageData(tensor.width, tensor.height);
+  tensor.pixels.forEach((row, y) => row.forEach((pixel, x) => {
+    const index = (y * tensor.width + x) * 4;
+    image.data[index] = pixel[0];
+    image.data[index + 1] = pixel[1];
+    image.data[index + 2] = pixel[2];
+    image.data[index + 3] = 255;
+  }));
+  outputContext.putImageData(image, 0, 0);
+  outputCanvas.toBlob((blob) => {
     if (!blob) return;
     const link = document.createElement('a');
     link.download = 'tensor-lens-adjusted.png';
@@ -179,15 +255,15 @@ imageUpload.addEventListener('change', async () => {
   const [file] = imageUpload.files;
   if (!file) return;
   try {
-    tensor = await readImageAsTensor(file);
+    setTensorStack(await readImageAsTensor(file));
     canvas.width = tensor.width;
     canvas.height = tensor.height;
     selectionCanvas.width = tensor.width;
     selectionCanvas.height = tensor.height;
     dots = [];
     selectedPolygon = null;
+    selectionSource = 'latest';
     imageName.textContent = file.name;
-    shape.textContent = `${tensor.height} × ${tensor.width} × 3 uint8`;
     render();
   } catch (error) {
     imageName.textContent = error.message;
@@ -196,31 +272,61 @@ imageUpload.addEventListener('change', async () => {
 document.querySelector('#create-selection-button').addEventListener('click', () => {
   if (dots.length < 3) return;
   selectedPolygon = [...dots];
+  selectionSource = 'latest';
+  render();
+});
+document.querySelector('#create-original-selection-button').addEventListener('click', () => {
+  if (dots.length < 3) return;
+  selectedPolygon = [...dots];
+  selectionSource = 'original';
   render();
 });
 document.querySelector('#clear-selection-button').addEventListener('click', () => {
   dots = [];
   selectedPolygon = null;
+  selectionSource = 'latest';
   render();
 });
 document.querySelector('#update-button').addEventListener('click', () => {
   if (!tensor) return;
   const offsets = controls.map((control) => Number(control.value));
+  const nextTensor = cloneTensor(tensor);
 
-  for (let y = 0; y < tensor.height; y += 1) {
-    for (let x = 0; x < tensor.width; x += 1) {
+  for (let y = 0; y < nextTensor.height; y += 1) {
+    for (let x = 0; x < nextTensor.width; x += 1) {
       if (!pixelIsSelected(x, y)) continue;
-      tensor.pixels[y][x] = tensor.pixels[y][x].map((value, index) => clamp(value + offsets[index]));
+      const source = selectionSource === 'original'
+        ? originalTensor.pixels[y][x]
+        : tensor.pixels[y][x];
+      nextTensor.pixels[y][x] = source.map((value, index) => clamp(value + offsets[index]));
     }
   }
 
+  tensorStack.push(nextTensor);
+  tensor = nextTensor;
+  updateTensorReadout();
   controls.forEach((control) => { control.value = 0; });
+  syncNumberControls();
   dots = [];
   selectedPolygon = null;
+  selectionSource = 'latest';
+  render();
+});
+document.querySelector('#undo-button').addEventListener('click', () => {
+  if (tensorStack.length <= 1) return;
+  tensorStack.pop();
+  tensor = tensorStack[tensorStack.length - 1];
+  controls.forEach((control) => { control.value = 0; });
+  syncNumberControls();
+  dots = [];
+  selectedPolygon = null;
+  selectionSource = 'latest';
+  updateTensorReadout();
   render();
 });
 document.querySelector('#reset-button').addEventListener('click', () => {
   controls.forEach((control) => { control.value = 0; });
+  syncNumberControls();
   render();
 });
 loadTensor().catch((error) => {

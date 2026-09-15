@@ -14,6 +14,9 @@ A small Flask app that loads an image as an RGB NumPy tensor and renders it on a
 - Applies channel adjustments to the entire canvas when no selection is active.
 - Removes all points, lines, and selection highlighting with **Clear selected area**.
 - Commits the current slider changes to the tensor with **Update tensor**, clears the selection, and keeps the updated image for future selections.
+- Keeps every committed image tensor in a stack. **Undo last tensor** removes the newest committed tensor and restores the previous canvas.
+- Starts each upload with an original-image tensor and a first stack entry. **Select original pixels** restores the selected polygon from that original tensor when the next update is committed; **Select latest tensor** uses the latest stack entry.
+- Downloads the latest tensor shown on the canvas.
 
 ## Run
 
