@@ -1,4 +1,5 @@
 # Tensor Lens
+## [🆕 Video - Tensor Lens](https://youtu.be/z4JPktiZjqI)
 ## [Video - Tensor Lens](https://youtu.be/HZD79x6fGqw)
 
 A small Flask app that loads an image as an RGB NumPy tensor and renders it on an HTML canvas.
