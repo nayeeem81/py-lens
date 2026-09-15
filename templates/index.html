@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tensor Lens</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <div>
+        <p class="eyebrow">RGB tensor / live canvas</p>
+        <h1>Tensor Lens</h1>
+      </div>
+      <div class="shape-readout" aria-live="polite">
+        <span id="shape">Loading tensor...</span>
+        <span class="status-dot"></span>
+      </div>
+    </header>
+
+    <section class="workspace" aria-label="Tensor image viewer">
+      <aside class="controls-panel">
+        <div class="upload-block">
+          <div>
+            <p class="eyebrow">Source image</p>
+            <p id="image-name" class="image-name">Generated sample</p>
+          </div>
+          <input id="image-upload" type="file" accept="image/*" hidden>
+          <button id="upload-button" class="upload-button" type="button">Select image</button>
+        </div>
+        <div class="panel-heading">
+          <p class="eyebrow">Channel mixer</p>
+          <h2>Adjust every pixel</h2>
+          <p class="muted">Each control adds an offset to its tensor channel.</p>
+        </div>
+
+        <div class="sliders">
+          <label class="channel-row channel-r" for="red-control">
+            <span class="channel-name"><i></i>Red <output id="red-value">0</output></span>
+            <input id="red-control" type="range" min="-255" max="255" value="0">
+          </label>
+          <label class="channel-row channel-g" for="green-control">
+            <span class="channel-name"><i></i>Green <output id="green-value">0</output></span>
+            <input id="green-control" type="range" min="-255" max="255" value="0">
+          </label>
+          <label class="channel-row channel-b" for="blue-control">
+            <span class="channel-name"><i></i>Blue <output id="blue-value">0</output></span>
+            <input id="blue-control" type="range" min="-255" max="255" value="0">
+          </label>
+        </div>
+
+        <div class="selection-actions">
+          <button id="create-selection-button" type="button">Create selection area</button>
+          <button id="clear-selection-button" class="secondary-button" type="button">Clear selected area</button>
+          <button id="update-button" class="update-button" type="button">Update tensor</button>
+        </div>
+        <button id="reset-button" type="button">Reset channels</button>
+        <div class="tensor-note">
+          <span class="tensor-mark">[r, g, b]</span>
+          <span>Values are clamped to 0–255 before the canvas renders.</span>
+        </div>
+      </aside>
+
+      <div class="canvas-panel">
+        <div class="canvas-topline">
+          <span>Rendered pixels</span>
+          <span id="pixel-position">Hover a pixel</span>
+        </div>
+        <div class="canvas-frame">
+          <div class="canvas-stage">
+            <canvas id="tensor-canvas" aria-label="RGB tensor image"></canvas>
+            <canvas id="selection-canvas" aria-label="Canvas selection overlay"></canvas>
+          </div>
+        </div>
+        <div class="canvas-footline">
+          <span>Nearest-neighbor preview</span>
+          <div class="canvas-actions">
+            <span id="pixel-values">R 0 &nbsp; G 0 &nbsp; B 0</span>
+            <button id="download-button" class="download-button" type="button">Download PNG</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
