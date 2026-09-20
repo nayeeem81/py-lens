@@ -1,0 +1,12 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/py-lens.slnx/FileContentIndex/2b19072f-085c-46e5-a119-057123ccbe5d.vsidx
+/.vs/py-lens.slnx/FileContentIndex/f5499071-b45b-477c-9563-f85958c3a423.vsidx
+/.vs/py-lens.slnx/v18/.wsuo
+/.vs/py-lens.slnx/v18/DocumentLayout.backup.json
+/.vs/py-lens.slnx/v18/DocumentLayout.json
+/.vs/slnx.sqlite
+/__pycache__/tensor_image.cpython-313.pyc
+/LICENSE.txt
