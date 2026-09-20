@@ -1,0 +1,15 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskLabel": "task-tensor_image.cpython-313",
+      "appliesTo": "__pycache__/tensor_image.cpython-313.pyc",
+      "type": "launch"
+    },
+    {
+      "taskLabel": "task-LICENSE",
+      "appliesTo": "LICENSE.txt",
+      "type": "launch"
+    }
+  ]
+}
